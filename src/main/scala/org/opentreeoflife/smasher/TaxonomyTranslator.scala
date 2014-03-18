@@ -47,7 +47,7 @@ object TaxonomyTranslator {
         axioms += (term Annotation (factory.getRDFSLabel, node.name))
       }
       for (id <- node.sourceIds.asScala) {
-        axioms == (term Annotation (xref, id.toString))
+        axioms += (term Annotation (xref, id.toString))
       }
       if (node.rank != Taxonomy.NO_RANK) {
         for {
