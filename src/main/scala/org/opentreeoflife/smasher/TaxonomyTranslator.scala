@@ -34,30 +34,21 @@ object TaxonomyTranslator {
 
   def translateNode(node: Taxon): Set[OWLAxiom] = {
     if (node.id != null) {
-      val axioms = mutable.Set[OWLAxiom]()
       val term = termForID(node.id)
-      axioms += factory.getOWLDeclarationAxiom(term)
-      for {
+      val subClassAxiom = for {
         parent <- Option(node.parent)
         parentID <- Option(parent.id)
-      } {
-        axioms += (term SubClassOf termForID(parentID))
-      }
-      if (node.name != null) {
-        axioms += (term Annotation (factory.getRDFSLabel, node.name))
-      }
-      for (id <- node.sourceIds.asScala) {
-        axioms += (term Annotation (xref, id.toString))
-      }
-      if (node.rank != Taxonomy.NO_RANK) {
-        for {
-          ranks <- rankLabels.get(node.rank)
-          rank <- ranks.headOption
-        } {
-          axioms += factory.getOWLAnnotationAssertionAxiom(hasRank, term.getIRI, rank)
-        }
-      }
-      axioms.toSet
+      } yield (term SubClassOf termForID(parentID))
+      val labelAxiom = Option(node.name) map (term Annotation (factory.getRDFSLabel, _))
+      val xrefAxioms = for {
+        id <- node.sourceIds.asScala.toSet[QualifiedId]
+      } yield (term Annotation (xref, id.toString))
+      val rankAxiom = for {
+        assignedRank <- Option(node.rank)
+        ranks <- rankLabels.get(assignedRank)
+        rank <- ranks.headOption
+      } yield factory.getOWLAnnotationAssertionAxiom(hasRank, term.getIRI, rank)
+      subClassAxiom.toSet ++ labelAxiom.toSet ++ xrefAxioms ++ rankAxiom.toSet + factory.getOWLDeclarationAxiom(term)
     } else Set()
   }
 

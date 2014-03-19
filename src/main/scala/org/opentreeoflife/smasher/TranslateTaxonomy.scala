@@ -7,9 +7,11 @@ import java.io.File
 
 object TranslateTaxonomy extends App {
 
+  val inputDirectory = args(0)
+  val outFile = args(1)
   val manager = OWLManager.createOWLOntologyManager
   val taxonomy = new UnionTaxonomy()
-  taxonomy.loadTaxonomy("/Users/jim/Desktop/ott/")
+  taxonomy.loadTaxonomy(inputDirectory)
   println("Converting nodes")
   val nodes = taxonomy.roots.toSet flatMap TaxonomyTranslator.translateWithDescendants
   println("Converting synonyms")
@@ -17,6 +19,6 @@ object TranslateTaxonomy extends App {
   println("Building ontology")
   val ontology = manager.createOntology(nodes ++ synonyms)
   println("Writing ontology")
-  manager.saveOntology(ontology, IRI.create(new File("/Users/jim/Desktop/ott.owl")))
+  manager.saveOntology(ontology, IRI.create(new File(outFile)))
 
 }
